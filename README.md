@@ -9,7 +9,7 @@ A self-hosted web app that imports Apple Music playlists into [Navidrome](https:
 ## What it does
 
 1. **Upload** an iTunes Library XML export or a single Apple Music playlist `.txt` export
-2. **Browse** your playlists and click Import
+2. **Browse** your playlists and click Import — optionally set a custom name for the Navidrome playlist
 3. For each track the app:
    - Checks if it already exists in your Navidrome library (via Lidarr or otherwise) — if so, skips the download
    - Searches SoundCloud first, falls back to YouTube
@@ -17,7 +17,7 @@ A self-hosted web app that imports Apple Music playlists into [Navidrome](https:
    - Tags and organises the file with beets
 4. Triggers a Navidrome library scan and creates/updates the playlist automatically
 
-Track progress is shown live in the browser. Jobs can be cancelled mid-run and removed cleanly (downloaded files are deleted and tracks reset for a fresh retry).
+Track progress is shown live in the browser and updates automatically. Jobs can be cancelled mid-run, retried for failed tracks only, and removed cleanly (downloaded files are deleted and tracks reset for a fresh retry).
 
 ---
 
@@ -64,6 +64,7 @@ NAVIDROME_URL=http://your-host:4533  # your Navidrome instance URL
 NAVIDROME_USER=admin
 NAVIDROME_PASSWORD=your-password
 SECRET_KEY=change-me-to-something-random
+JOB_RETENTION_DAYS=30                # auto-delete completed jobs older than this (default 30)
 ```
 
 ### 3. Start the app
@@ -89,14 +90,20 @@ Right-click a playlist in the sidebar → `Export…` → upload the `.txt` file
 ### Import a playlist
 
 1. Upload your file on the home page
-2. Click **Import** next to the playlist you want
-3. Watch progress on the job page — each track shows its status and source (SoundCloud, YouTube, or Already in library)
-4. When complete, the playlist appears in Navidrome automatically
+2. On the library page, optionally type a custom Navidrome playlist name in the field next to the playlist — leave it blank to use the Apple Music name as-is
+3. Click **Import**
+4. Watch progress update live — each track shows its status and source (SoundCloud, YouTube, or Already in library). Failed tracks show the error message inline
+5. When complete, the playlist appears in Navidrome automatically
 
 ### Managing jobs
 
+Actions are available on both the individual job page and the jobs list:
+
 - **Cancel** — stops after the current track finishes downloading
-- **Remove** — cancels, deletes any downloaded files, and resets tracks to pending so you can re-import cleanly
+- **Retry failed (N)** — resets all failed and unprocessed tracks back to pending and starts a new run, preserving tracks that already completed successfully. Available after a job finishes, fails, or is cancelled
+- **Remove** — deletes any downloaded files and resets tracks to pending so you can re-import cleanly. Prompts for confirmation before proceeding
+
+The jobs list refreshes automatically every few seconds while any import is active, so you can monitor multiple jobs at once without manually reloading.
 
 ---
 
@@ -105,7 +112,10 @@ Right-click a playlist in the sidebar → `Export…` → upload the `.txt` file
 - Tracks already in your Navidrome library (e.g. managed by Lidarr) are detected first and added to the playlist without re-downloading
 - Downloads from SoundCloud/YouTube are lossy (MP3, M4A, Opus). Lidarr-managed tracks retain their original quality
 - Cover art is embedded automatically from the download source
+- If a playlist with the same name already exists in Navidrome it will be **replaced** with the current import's tracks — use the custom name field if you want to keep an existing playlist untouched
 - The beets library (`config/beets/library.db`) tracks what has been imported. If you manually delete music files, remove the job through the UI rather than deleting files directly — this keeps the beets database consistent
+- Jobs that were running when the container last stopped are automatically marked as failed on startup so you can retry them cleanly
+- Completed, failed, and cancelled jobs are automatically purged after `JOB_RETENTION_DAYS` days (default 30) — this runs on startup and every 24 hours
 
 ---
 
