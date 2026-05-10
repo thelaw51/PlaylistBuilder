@@ -18,7 +18,8 @@ def create_app() -> Flask:
 
     with app.app_context():
         from app.models import Library, Playlist, Track, ImportJob  # noqa: F401
-        from sqlalchemy import text
+        from sqlalchemy import text, or_
+        from datetime import datetime
         db.create_all()
         with db.engine.connect() as conn:
             try:
@@ -26,6 +27,26 @@ def create_app() -> Flask:
                 conn.commit()
             except Exception:
                 pass  # column already exists
+
+        # Mark any jobs left running from a previous process as failed so they
+        # don't appear frozen. Mid-flight tracks are set to failed so the
+        # existing "Retry failed" button can re-queue them.
+        stuck_jobs = ImportJob.query.filter_by(status='running').all()
+        for job in stuck_jobs:
+            Track.query.filter(
+                Track.playlist_id == job.playlist_id,
+                or_(Track.status == 'downloading', Track.status == 'tagging'),
+            ).update(
+                {'status': 'failed', 'error_msg': 'Interrupted by server restart'},
+                synchronize_session=False,
+            )
+            job.tracks_failed = Track.query.filter_by(
+                playlist_id=job.playlist_id, status='failed'
+            ).count()
+            job.status = 'failed'
+            job.completed_at = datetime.utcnow()
+        if stuck_jobs:
+            db.session.commit()
 
     from app.routes.library import library_bp
     from app.routes.jobs import jobs_bp
