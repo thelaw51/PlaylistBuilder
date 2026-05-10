@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}PlaylistBuilder — Upload Library{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <h1 class="mb-1 text-2xl font-bold">Import Apple Music Library</h1>
+  <p class="mb-4 text-sm text-gray-400">
+    Upload either:
+  </p>
+  <ul class="mb-6 list-disc pl-5 text-sm text-gray-400 space-y-1">
+    <li><strong>Full library XML</strong> — Music.app: <strong>File → Library → Export Library…</strong> — imports all your playlists at once</li>
+    <li><strong>Single playlist .txt</strong> — right-click a playlist → <strong>Export…</strong> — imports just that playlist, named after the file</li>
+  </ul>
+
+  <form action="/library" method="post" enctype="multipart/form-data"
+        class="mb-10 rounded-xl border border-gray-700 bg-gray-900 p-6">
+    <label class="mb-3 block text-sm font-medium text-gray-300" for="library_file">
+      iTunes Library XML or Playlist .txt
+    </label>
+    <input
+      id="library_file"
+      name="library_file"
+      type="file"
+      accept=".xml,.txt"
+      required
+      class="block w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-sm
+             text-gray-200 file:mr-4 file:rounded file:border-0 file:bg-indigo-700
+             file:px-3 file:py-1 file:text-sm file:font-medium file:text-white
+             hover:file:bg-indigo-600 focus:outline-none"
+    >
+    <button type="submit"
+            class="mt-4 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold
+                   text-white hover:bg-indigo-500 active:bg-indigo-700">
+      Upload &amp; Parse
+    </button>
+  </form>
+
+  {% if libraries %}
+    <h2 class="mb-3 text-lg font-semibold">Previous uploads</h2>
+    <ul class="space-y-2">
+      {% for lib in libraries %}
+        <li class="flex items-center justify-between rounded-lg border border-gray-700
+                   bg-gray-900 px-4 py-3">
+          <div>
+            <span class="font-medium">{{ lib.filename }}</span>
+            <span class="ml-3 text-xs text-gray-500">
+              {{ lib.uploaded_at.strftime('%d %b %Y %H:%M') }}
+            </span>
+          </div>
+          <a href="/library/{{ lib.id }}"
+             class="text-sm text-indigo-400 hover:text-indigo-300">View playlists →</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+{% endblock %}

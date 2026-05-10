@@ -1,0 +1,72 @@
+{# HTMX polling partial — swaps itself out every 2 s while the job is running #}
+<div id="progress"
+  {% if job.status == 'running' %}
+  hx-get="/jobs/{{ job.id }}/progress"
+  hx-trigger="every 2s"
+  hx-swap="outerHTML"
+  {% endif %}
+  {# polling stops automatically when status is done/cancelled/failed #}
+>
+
+  {# Progress bar #}
+  {% if job.tracks_total %}
+    {% set done_count = job.tracks_done + job.tracks_failed %}
+    {% set pct = (done_count / job.tracks_total * 100) | int %}
+    <div class="mb-2 flex items-center justify-between text-sm text-gray-400">
+      <span>{{ done_count }} / {{ job.tracks_total }} processed</span>
+      <span>{{ job.tracks_done }} done · {{ job.tracks_failed }} failed</span>
+    </div>
+    <div class="mb-6 h-2 w-full rounded-full bg-gray-700">
+      <div class="h-2 rounded-full bg-indigo-500 transition-all" style="width: {{ pct }}%"></div>
+    </div>
+  {% elif job.status == 'running' %}
+    <p class="mb-6 text-sm text-gray-400 animate-pulse">Starting…</p>
+  {% endif %}
+
+  {# Track table #}
+  <div class="overflow-hidden rounded-xl border border-gray-700">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-800 text-xs uppercase tracking-wider text-gray-500">
+        <tr>
+          <th class="px-4 py-3 text-left">Track</th>
+          <th class="px-4 py-3 text-left">Artist</th>
+          <th class="px-4 py-3 text-left">Source</th>
+          <th class="px-4 py-3 text-left">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-800">
+        {% for track in tracks %}
+          <tr class="bg-gray-900">
+            <td class="max-w-xs truncate px-4 py-3 font-medium">{{ track.title }}</td>
+            <td class="max-w-xs truncate px-4 py-3 text-gray-400">{{ track.artist or '—' }}</td>
+            <td class="px-4 py-3 text-gray-500 text-xs">
+              {% if track.source == 'soundcloud' %}SoundCloud
+              {% elif track.source == 'youtube' %}YouTube
+              {% elif track.source == 'navidrome' %}Already in library
+              {% else %}—{% endif %}
+            </td>
+            <td class="px-4 py-3">
+              <span class="rounded-full px-2 py-0.5 text-xs font-semibold
+                {% if track.status == 'done' %}bg-green-900/60 text-green-300
+                {% elif track.status == 'failed' %}bg-red-900/60 text-red-300
+                {% elif track.status in ('downloading', 'tagging') %}bg-indigo-900/60 text-indigo-300
+                {% else %}bg-gray-700 text-gray-400{% endif %}">
+                {{ track.status }}
+              </span>
+            </td>
+          </tr>
+          {% if track.status == 'failed' and track.error_msg %}
+            <tr class="bg-gray-950">
+              <td colspan="4" class="px-4 pb-3 pt-0">
+                <p class="rounded-md bg-red-950/40 px-3 py-2 font-mono text-xs text-red-400 break-all">
+                  {{ track.error_msg }}
+                </p>
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>

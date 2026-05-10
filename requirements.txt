@@ -1,0 +1,6 @@
+flask==3.*
+flask-sqlalchemy==3.*
+httpx==0.*
+gunicorn
+werkzeug
+mutagen

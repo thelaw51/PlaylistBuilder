@@ -1,0 +1,14 @@
+directory: /music
+library: /config/beets/library.db
+
+import:
+  quiet: yes
+  move: yes
+  write: yes
+  duplicate_action: remove
+  log: /config/beets/import.log
+
+paths:
+  default: $albumartist/$album%if{$year, ($year)}/$title
+  singleton: Singles/$artist/$title
+  comp: Compilations/$album%if{$year, ($year)}/$title

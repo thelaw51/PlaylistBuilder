@@ -1,0 +1,35 @@
+# Secrets
+.env
+
+# Runtime data
+data/
+
+# Beets runtime state
+config/beets/library.db
+config/beets/import.log
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+*.egg
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Claude Code project memory
+.claude/

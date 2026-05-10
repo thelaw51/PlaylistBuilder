@@ -1,0 +1,18 @@
+services:
+  webapp:
+    build: .
+    ports:
+      - "8080:5000"
+    volumes:
+      - ${MUSIC_DIR:?Set MUSIC_DIR in .env}:/music
+      - ./data:/data
+      - ./config/beets:/config/beets
+    environment:
+      - NAVIDROME_URL=${NAVIDROME_URL:?Set NAVIDROME_URL in .env}
+      - NAVIDROME_USER=${NAVIDROME_USER:-admin}
+      - NAVIDROME_PASSWORD=${NAVIDROME_PASSWORD:?Set NAVIDROME_PASSWORD in .env}
+      - SECRET_KEY=${SECRET_KEY:-change-me}
+      - DATABASE_URL=sqlite:////data/playlist_builder.db
+      - BEETS_CONFIG=/config/beets/config.yaml
+      - DOWNLOAD_DIR=/tmp/pb_downloads
+    restart: unless-stopped

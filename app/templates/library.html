@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}{{ lib.filename }} — PlaylistBuilder{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <a href="/" class="text-sm text-gray-500 hover:text-gray-300">← Back</a>
+  <h1 class="mt-2 text-2xl font-bold">{{ lib.filename }}</h1>
+  <p class="text-sm text-gray-400">{{ playlists | length }} playlist(s)</p>
+</div>
+
+{% if playlists %}
+  <div class="space-y-3">
+    {% for pl in playlists %}
+      <div class="flex items-center justify-between rounded-xl border border-gray-700
+                  bg-gray-900 px-5 py-4">
+        <div>
+          <p class="font-medium">{{ pl.name }}</p>
+          <p class="text-xs text-gray-500">{{ pl.tracks | length }} track(s)</p>
+        </div>
+        <form action="/library/{{ lib.id }}/playlist/{{ pl.id }}/import" method="post">
+          <button type="submit"
+                  class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold
+                         text-white hover:bg-indigo-500 active:bg-indigo-700">
+            Import
+          </button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="text-gray-400">No user playlists found in this library export.</p>
+{% endif %}
+{% endblock %}
