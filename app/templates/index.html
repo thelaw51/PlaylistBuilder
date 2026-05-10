@@ -1,90 +1,109 @@
-{% extends 'base.html' %}
-{% block title %}Library — PlaylistBuilder{% endblock %}
-
-{% block content %}
-
-{# ── Page header ─────────────────────────────────────────── #}
+{% extends 'base.html' %} {% block title %}Library — PlaylistBuilder{% endblock
+%} {% block content %} {# ── Page header
+─────────────────────────────────────────── #}
 <div class="mb-7 flex items-baseline justify-between">
   <div>
-    <h1 class="text-xs font-semibold uppercase tracking-[0.12em] text-[#e8e8e8]">Library</h1>
+    <h1
+      class="text-xs font-semibold uppercase tracking-[0.12em] text-[#e8e8e8]"
+    >
+      Library
+    </h1>
     {% if lib and lib.updated_at %}
-      <p class="mt-0.5 text-[11px] text-[#3a3a3a]">
-        updated {{ lib.updated_at.strftime('%d %b %Y %H:%M') }}
-      </p>
+    <p class="mt-0.5 text-[11px] text-[#3a3a3a]">
+      updated {{ lib.updated_at.strftime('%d %b %Y %H:%M') }}
+    </p>
     {% endif %}
   </div>
   <span class="text-[11px] text-[#3a3a3a]">
-    {{ playlists | length }} playlist{{ 's' if playlists | length != 1 else '' }}
+    {{ playlists | length }} playlist{{ 's' if playlists | length != 1 else ''
+    }}
   </span>
 </div>
 
 {# ── Upload drawer ───────────────────────────────────────── #}
 <details class="mb-8 border-t border-b border-[#1c1c1c] group">
-  <summary class="flex cursor-pointer select-none items-center gap-2 py-3
-                  text-[11px] text-[#484848] hover:text-[#888] transition-colors"
-           style="list-style:none">
-    <svg class="h-3 w-3 transition-transform group-open:rotate-90" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path d="M4 2l4 4-4 4"/>
+  <summary
+    class="flex cursor-pointer select-none items-center gap-2 py-3 text-[11px] text-[#484848] hover:text-[#888] transition-colors"
+    style="list-style: none"
+  >
+    <svg
+      class="h-3 w-3 transition-transform group-open:rotate-90"
+      viewBox="0 0 12 12"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+    >
+      <path d="M4 2l4 4-4 4" />
     </svg>
     update library from file
-    <span class="ml-auto text-[10px] text-[#2e2e2e] uppercase tracking-wider">.xml / .txt</span>
+    <span class="ml-auto text-[10px] text-[#2e2e2e] uppercase tracking-wider"
+      >.xml / .txt</span
+    >
   </summary>
 
   <div class="pb-5 pt-2">
     <p class="mb-4 text-[11px] text-[#3a3a3a] leading-5">
-      <span class="text-[#555]">.xml</span> — Music.app → File → Library → Export Library… — merges all playlists<br>
-      <span class="text-[#555]">.txt</span> — right-click playlist → Export… — adds or updates that playlist
+      <span class="text-[#555]">.xml</span> — Music.app → File → Library →
+      Export Library… — merges all playlists<br />
+      <span class="text-[#555]">.txt</span> — right-click playlist → Export… —
+      adds or updates that playlist
     </p>
-    <form action="/library" method="post" enctype="multipart/form-data" class="flex items-center gap-3 flex-wrap">
+    <form
+      action="/library"
+      method="post"
+      enctype="multipart/form-data"
+      class="flex items-center gap-3 flex-wrap"
+    >
       <input
         id="library_file"
         name="library_file"
         type="file"
         accept=".xml,.txt"
         required
-        class="text-[11px] text-[#666]
-               file:border file:border-[#252525] file:bg-transparent
-               file:px-3 file:py-1.5 file:text-[11px] file:text-[#666] file:font-normal file:mr-3
-               hover:file:border-[#3a3a3a] hover:file:text-[#aaa] file:transition-colors file:cursor-pointer"
+        class="text-[11px] text-[#666] file:border file:border-[#252525] file:bg-transparent file:px-3 file:py-1.5 file:text-[11px] file:text-[#666] file:font-normal file:mr-3 hover:file:border-[#3a3a3a] hover:file:text-[#aaa] file:transition-colors file:cursor-pointer"
+      />
+      <button
+        type="submit"
+        class="border border-[#252525] px-3 py-1.5 text-[11px] text-[#666] hover:border-[#22c55e] hover:text-[#22c55e] transition-colors"
       >
-      <button type="submit"
-              class="border border-[#252525] px-3 py-1.5 text-[11px] text-[#666]
-                     hover:border-[#22c55e] hover:text-[#22c55e] transition-colors">
         upload &amp; merge
       </button>
     </form>
   </div>
 </details>
 
-{% if playlists %}
-
-{# ── Toolbar ─────────────────────────────────────────────── #}
+{% if playlists %} {# ── Toolbar ───────────────────────────────────────────────
+#}
 <div class="mb-3 flex items-center gap-1">
   <div class="flex items-center text-[11px]">
-    <a href="?sort=name"
-       class="px-2 py-1 transition-colors
-              {% if sort == 'name' %}text-[#22c55e]{% else %}text-[#404040] hover:text-[#777]{% endif %}">
+    <a
+      href="?sort=name"
+      class="px-2 py-1 transition-colors {% if sort == 'name' %}text-[#22c55e]{% else %}text-[#404040] hover:text-[#777]{% endif %}"
+    >
       a–z
     </a>
     <span class="text-[#242424]">·</span>
-    <a href="?sort=tracks"
-       class="px-2 py-1 transition-colors
-              {% if sort == 'tracks' %}text-[#22c55e]{% else %}text-[#404040] hover:text-[#777]{% endif %}">
-      by tracks
+    <a
+      href="?sort=tracks"
+      class="px-2 py-1 transition-colors {% if sort == 'tracks' %}text-[#22c55e]{% else %}text-[#404040] hover:text-[#777]{% endif %}"
+    >
+      by track count
     </a>
   </div>
   <div class="ml-auto flex items-center gap-3">
-    <button onclick="toggleAll()" type="button"
-            class="text-[11px] text-[#404040] hover:text-[#777] transition-colors">
+    <button
+      onclick="toggleAll()"
+      type="button"
+      class="text-[11px] text-[#404040] hover:text-[#777] transition-colors"
+    >
       select all
     </button>
-    <button id="import-selected-btn"
-            onclick="submitSelected()"
-            disabled
-            class="border px-3 py-1 text-[11px] transition-colors
-                   border-[#22c55e] text-[#22c55e] hover:bg-[rgba(34,197,94,0.07)]
-                   disabled:border-[#1e1e1e] disabled:text-[#2e2e2e] disabled:cursor-not-allowed
-                   disabled:hover:bg-transparent">
+    <button
+      id="import-selected-btn"
+      onclick="submitSelected()"
+      disabled
+      class="border px-3 py-1 text-[11px] transition-colors border-[#22c55e] text-[#22c55e] hover:bg-[rgba(34,197,94,0.07)] disabled:border-[#1e1e1e] disabled:text-[#2e2e2e] disabled:cursor-not-allowed disabled:hover:bg-transparent"
+    >
       import (0)
     </button>
   </div>
@@ -96,50 +115,58 @@
 {# ── Playlist rows ────────────────────────────────────────── #}
 <div class="border-t border-[#1c1c1c]">
   {% for pl in playlists %}
-    <div class="flex items-center gap-3 border-b border-[#131313] py-2.5
-                hover:bg-[rgba(255,255,255,0.018)] transition-colors">
-      <input type="checkbox"
-             class="playlist-cb h-3 w-3 shrink-0 accent-[#22c55e] cursor-pointer"
-             value="{{ pl.id }}"
-             onchange="updateBulkBtn()">
-      <span class="min-w-0 flex-1 truncate text-xs text-[#c8c8c8]">{{ pl.name }}</span>
-      <span class="shrink-0 text-[11px] text-[#343434] tabular-nums">
-        {{ pl.tracks | length }}
-      </span>
-      <form hx-post="/playlist/{{ pl.id }}/import"
-            hx-swap="outerHTML"
-            class="flex items-center gap-2 shrink-0">
-        <input type="text"
-               name="navidrome_name"
-               placeholder="{{ pl.name }}"
-               class="w-40 border-b border-[#1e1e1e] bg-transparent px-1 py-0.5
-                      text-[11px] text-[#888] placeholder-[#2e2e2e]
-                      focus:outline-none focus:border-[#22c55e] transition-colors">
-        <button type="submit"
-                class="border border-[#252525] px-2.5 py-1 text-[11px] text-[#555]
-                       hover:border-[#22c55e] hover:text-[#22c55e] transition-colors whitespace-nowrap">
-          import
-        </button>
-      </form>
-    </div>
+  <div
+    class="flex items-center gap-3 border-b border-[#131313] py-2.5 hover:bg-[rgba(255,255,255,0.018)] transition-colors"
+  >
+    <input
+      type="checkbox"
+      class="playlist-cb h-3 w-3 shrink-0 accent-[#22c55e] cursor-pointer"
+      value="{{ pl.id }}"
+      onchange="updateBulkBtn()"
+    />
+    <span class="min-w-0 flex-1 truncate text-xs text-[#c8c8c8]"
+      >{{ pl.name }}</span
+    >
+    <span class="shrink-0 text-[11px] text-[#484848] tabular-nums">
+      {{ pl.tracks | length }} <span class="text-[#2e2e2e]">tracks</span>
+    </span>
+    <form
+      hx-post="/playlist/{{ pl.id }}/import"
+      hx-swap="outerHTML"
+      class="flex items-center gap-2 shrink-0"
+    >
+      <input
+        type="text"
+        name="navidrome_name"
+        placeholder="{{ pl.name }}"
+        class="w-40 border-b border-[#1e1e1e] bg-transparent px-1 py-0.5 text-[11px] text-[#888] placeholder-[#2e2e2e] focus:outline-none focus:border-[#22c55e] transition-colors"
+      />
+      <button
+        type="submit"
+        class="border border-[#252525] px-2.5 py-1 text-[11px] text-[#555] hover:border-[#22c55e] hover:text-[#22c55e] transition-colors whitespace-nowrap"
+      >
+        import
+      </button>
+    </form>
+  </div>
   {% endfor %}
 </div>
 
 <script>
   function updateBulkBtn() {
-    const checked = document.querySelectorAll('.playlist-cb:checked');
-    const btn = document.getElementById('import-selected-btn');
-    btn.textContent = 'import (' + checked.length + ')';
+    const checked = document.querySelectorAll(".playlist-cb:checked");
+    const btn = document.getElementById("import-selected-btn");
+    btn.textContent = "import (" + checked.length + ")";
     btn.disabled = checked.length === 0;
   }
 
   function submitSelected() {
-    const form = document.getElementById('bulk-form');
-    form.innerHTML = '';
-    document.querySelectorAll('.playlist-cb:checked').forEach(function(cb) {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'pl';
+    const form = document.getElementById("bulk-form");
+    form.innerHTML = "";
+    document.querySelectorAll(".playlist-cb:checked").forEach(function (cb) {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "pl";
       input.value = cb.value;
       form.appendChild(input);
     });
@@ -149,7 +176,7 @@
   let allSelected = false;
   function toggleAll() {
     allSelected = !allSelected;
-    document.querySelectorAll('.playlist-cb').forEach(function(cb) {
+    document.querySelectorAll(".playlist-cb").forEach(function (cb) {
       cb.checked = allSelected;
     });
     updateBulkBtn();
@@ -157,9 +184,7 @@
 </script>
 
 {% else %}
-  <p class="text-xs text-[#3a3a3a]">
-    No playlists yet — upload an iTunes Library XML or playlist .txt above.
-  </p>
-{% endif %}
-
-{% endblock %}
+<p class="text-xs text-[#3a3a3a]">
+  No playlists yet — upload an iTunes Library XML or playlist .txt above.
+</p>
+{% endif %} {% endblock %}
