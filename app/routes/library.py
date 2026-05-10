@@ -83,6 +83,32 @@ def show(lib_id: int):
     return render_template('library.html', lib=lib, playlists=playlists, sort=sort)
 
 
+@library_bp.route('/library/<int:lib_id>/delete', methods=['POST'])
+def delete_library(lib_id: int):
+    """Remove a library upload and all its playlists, tracks, and jobs."""
+    lib = db.session.get(Library, lib_id)
+    if not lib:
+        return redirect(url_for('library.index'))
+
+    playlist_ids = [pl.id for pl in lib.playlists]
+    if playlist_ids:
+        running = ImportJob.query.filter(
+            ImportJob.playlist_id.in_(playlist_ids),
+            ImportJob.status == 'running',
+        ).first()
+        if running:
+            flash('Cannot remove — an import is still running for this library.', 'error')
+            return redirect(url_for('library.index'))
+
+        ImportJob.query.filter(ImportJob.playlist_id.in_(playlist_ids)).delete(synchronize_session=False)
+        Track.query.filter(Track.playlist_id.in_(playlist_ids)).delete(synchronize_session=False)
+        Playlist.query.filter_by(library_id=lib_id).delete(synchronize_session=False)
+
+    db.session.delete(lib)
+    db.session.commit()
+    return redirect(url_for('library.index'))
+
+
 @library_bp.route('/library/<int:lib_id>/import-selected', methods=['POST'])
 def import_selected(lib_id: int):
     """Start import jobs for all checked playlists and redirect to the jobs list."""

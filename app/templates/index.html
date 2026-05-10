@@ -47,8 +47,18 @@
               {{ lib.uploaded_at.strftime('%d %b %Y %H:%M') }}
             </span>
           </div>
-          <a href="/library/{{ lib.id }}"
-             class="text-sm text-indigo-400 hover:text-indigo-300">View playlists →</a>
+          <div class="flex items-center gap-4">
+            <a href="/library/{{ lib.id }}"
+               class="text-sm text-indigo-400 hover:text-indigo-300">View playlists →</a>
+            <form action="/library/{{ lib.id }}/delete" method="post"
+                  onsubmit="return confirm('Remove this upload and all its playlists and jobs?')">
+              <button type="submit"
+                      title="Remove upload"
+                      class="text-lg leading-none text-gray-600 hover:text-red-400 transition-colors">
+                &times;
+              </button>
+            </form>
+          </div>
         </li>
       {% endfor %}
     </ul>
