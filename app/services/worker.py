@@ -6,6 +6,8 @@ import threading
 import time
 from datetime import datetime, timedelta
 
+import httpx
+
 from app import db
 from app.models import ImportJob, Playlist, Track
 from app.services import downloader, navidrome, tagger
@@ -199,10 +201,11 @@ def _sync_to_navidrome(job: ImportJob) -> None:
         return
 
     song_ids: list[str] = []
-    for track in done_tracks:
-        nid = navidrome.find_track_id(track.title, track.artist or "")
-        if nid:
-            song_ids.append(nid)
+    with httpx.Client(timeout=10) as client:
+        for track in done_tracks:
+            nid = navidrome.find_track_id(track.title, track.artist or "", client=client)
+            if nid:
+                song_ids.append(nid)
 
     if song_ids:
         try:
@@ -215,15 +218,13 @@ def purge_old_jobs(app) -> None:
     """Delete terminal jobs older than JOB_RETENTION_DAYS."""
     cutoff = datetime.utcnow() - timedelta(days=_RETENTION_DAYS)
     with app.app_context():
-        old_jobs = ImportJob.query.filter(
+        deleted = ImportJob.query.filter(
             ImportJob.status.in_(["done", "failed", "cancelled"]),
             ImportJob.created_at < cutoff,
-        ).all()
-        for job in old_jobs:
-            db.session.delete(job)
-        if old_jobs:
+        ).delete(synchronize_session=False)
+        if deleted:
             db.session.commit()
-            logger.info("Purged %d old job(s) older than %d days", len(old_jobs), _RETENTION_DAYS)
+            logger.info("Purged %d old job(s) older than %d days", deleted, _RETENTION_DAYS)
 
 
 def start_maintenance(app) -> None:

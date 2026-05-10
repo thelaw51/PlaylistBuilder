@@ -48,7 +48,9 @@ def remove_from_library(title: str, artist: str) -> None:
     Uses ``beet remove --delete --yes`` with a title+artist query.
     Silently ignores failures — beets may not know about every file we imported.
     """
-    # Beets query terms never start with '-' so no '--' sentinel is needed here.
+    # Quote values so colons/special chars in titles don't break beets' query parser.
+    safe_title = title.replace('"', "")
+    safe_artist = artist.replace('"', "")
     cmd = [
         "beet",
         "--config",
@@ -56,8 +58,8 @@ def remove_from_library(title: str, artist: str) -> None:
         "remove",
         "--delete",
         "--force",
-        f"title:{title}",
-        f"artist:{artist}",
+        f'title:"{safe_title}"',
+        f'artist:"{safe_artist}"',
     ]
 
     try:

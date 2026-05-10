@@ -1,12 +1,19 @@
 """yt-dlp wrapper: tries SoundCloud first, falls back to YouTube."""
 
 import glob
+import logging
 import os
 import re
 import subprocess
 import tempfile
 
+from mutagen import File as MutagenFile
+from mutagen.easyid3 import EasyID3
+from mutagen.id3 import ID3NoHeaderError
+from mutagen.mp4 import MP4
+
 DOWNLOAD_BASE = os.environ.get("DOWNLOAD_DIR", "/tmp/pb_downloads")
+logger = logging.getLogger(__name__)
 
 
 def download_track(title: str, artist: str, album: str = "") -> tuple[str | None, str | None, str]:
@@ -107,11 +114,6 @@ def _extract_ytdlp_error(stderr: str) -> str:
 def _write_tags(path: str, title: str, artist: str, album: str) -> None:
     """Overwrite the downloaded file's tags with iTunes-known metadata."""
     try:
-        from mutagen import File as MutagenFile
-        from mutagen.easyid3 import EasyID3
-        from mutagen.id3 import ID3NoHeaderError
-        from mutagen.mp4 import MP4
-
         ext = os.path.splitext(path)[1].lower()
 
         if ext == ".mp3":
@@ -147,5 +149,5 @@ def _write_tags(path: str, title: str, artist: str, album: str) -> None:
                 if album:
                     tags["album"] = [album]
                 tags.save()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Tag write failed for %s: %s", path, exc)

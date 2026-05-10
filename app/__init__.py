@@ -1,7 +1,9 @@
 import os
+from datetime import datetime
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_
 
 db = SQLAlchemy()
 
@@ -18,10 +20,6 @@ def create_app() -> Flask:
     db.init_app(app)
 
     with app.app_context():
-        from datetime import datetime
-
-        from sqlalchemy import or_
-
         from app.models import ImportJob, Library, Playlist, Track  # noqa: F401
 
         db.create_all()
