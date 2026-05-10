@@ -13,6 +13,7 @@ from mutagen.id3 import ID3NoHeaderError
 from mutagen.mp4 import MP4
 
 DOWNLOAD_BASE = os.environ.get("DOWNLOAD_DIR", "/tmp/pb_downloads")
+YT_COOKIES_FILE = os.environ.get("YT_COOKIES_FILE", "")
 logger = logging.getLogger(__name__)
 
 
@@ -56,6 +57,7 @@ def _run_yt_dlp(search_term: str) -> tuple[str | None, str]:
     parsed as a yt-dlp option.
     Returns ``(local_path, error_msg)``.
     """
+    is_youtube = search_term.startswith("ytsearch")
     with tempfile.TemporaryDirectory(prefix="pb_", dir=DOWNLOAD_BASE) as tmpdir:
         output_template = os.path.join(tmpdir, "%(id)s.%(ext)s")
         cmd = [
@@ -71,9 +73,12 @@ def _run_yt_dlp(search_term: str) -> tuple[str | None, str]:
             "--output",
             output_template,
             "--no-warnings",
-            "--",
-            search_term,
         ]
+        if is_youtube:
+            cmd += ["--extractor-args", "youtube:player_client=android,web"]
+            if YT_COOKIES_FILE:
+                cmd += ["--cookies", YT_COOKIES_FILE]
+        cmd += ["--", search_term]
 
         try:
             result = subprocess.run(

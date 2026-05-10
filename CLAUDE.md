@@ -52,6 +52,7 @@ ruff check .
 | `BEETS_CONFIG` | Beets config path (default `/config/beets/config.yaml`) |
 | `DOWNLOAD_DIR` | yt-dlp temp output (default `/tmp/pb_downloads`) |
 | `JOB_RETENTION_DAYS` | Days to keep terminal jobs (default `30`) |
+| `YT_COOKIES_FILE` | Path to a Netscape cookies file for YouTube auth — bypasses age-restricted videos (optional) |
 
 ## Architecture
 

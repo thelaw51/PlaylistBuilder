@@ -16,6 +16,8 @@ services:
       - BEETS_CONFIG=/config/beets/config.yaml
       - DOWNLOAD_DIR=/tmp/pb_downloads
       - JOB_RETENTION_DAYS=30
+      # Optional: path to a Netscape cookies file for age-restricted YouTube videos
+      # - YT_COOKIES_FILE=/data/youtube-cookies.txt
     restart: unless-stopped
 
 volumes:
