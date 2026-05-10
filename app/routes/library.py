@@ -2,10 +2,11 @@ import os
 import tempfile
 
 from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from sqlalchemy import func
 from werkzeug.utils import secure_filename
 
 from app import db
-from app.models import ImportJob, Library, Playlist
+from app.models import ImportJob, Library, Playlist, Track
 from app.services import parser, worker
 
 library_bp = Blueprint('library', __name__)
@@ -67,8 +68,19 @@ def show(lib_id: int):
     lib = db.session.get(Library, lib_id)
     if not lib:
         return redirect(url_for('library.index'))
-    playlists = Playlist.query.filter_by(library_id=lib_id).order_by(Playlist.name).all()
-    return render_template('library.html', lib=lib, playlists=playlists)
+    sort = request.args.get('sort', 'name')
+    if sort == 'tracks':
+        playlists = (
+            Playlist.query
+            .filter_by(library_id=lib_id)
+            .outerjoin(Track, Track.playlist_id == Playlist.id)
+            .group_by(Playlist.id)
+            .order_by(func.count(Track.id).desc())
+            .all()
+        )
+    else:
+        playlists = Playlist.query.filter_by(library_id=lib_id).order_by(Playlist.name).all()
+    return render_template('library.html', lib=lib, playlists=playlists, sort=sort)
 
 
 @library_bp.route('/library/<int:lib_id>/playlist/<int:pl_id>/import', methods=['POST'])

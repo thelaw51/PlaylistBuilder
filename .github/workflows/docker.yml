@@ -2,7 +2,7 @@ name: Build and push image
 
 on:
   push:
-    branches: [main]
+    branches: [main, testing]
 
 jobs:
   build:
@@ -28,5 +28,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/playlistbuilder:latest
+            ghcr.io/${{ github.repository_owner }}/playlistbuilder:${{ github.ref_name == 'main' && 'latest' || 'testing' }}
             ghcr.io/${{ github.repository_owner }}/playlistbuilder:${{ github.sha }}

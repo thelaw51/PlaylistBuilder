@@ -9,6 +9,21 @@
 </div>
 
 {% if playlists %}
+  <div class="mb-4 flex items-center gap-2 text-sm">
+    <span class="text-gray-500">Sort:</span>
+    <a href="?sort=name"
+       class="rounded-lg border px-3 py-1
+              {% if sort == 'name' %}border-indigo-600 text-indigo-400
+              {% else %}border-gray-700 text-gray-400 hover:border-gray-500{% endif %}">
+      A–Z
+    </a>
+    <a href="?sort=tracks"
+       class="rounded-lg border px-3 py-1
+              {% if sort == 'tracks' %}border-indigo-600 text-indigo-400
+              {% else %}border-gray-700 text-gray-400 hover:border-gray-500{% endif %}">
+      Track count
+    </a>
+  </div>
   <div class="space-y-3">
     {% for pl in playlists %}
       <div class="flex items-center justify-between rounded-xl border border-gray-700
