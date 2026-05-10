@@ -43,16 +43,36 @@ Track progress is shown live in the browser and updates automatically. Jobs can 
 
 ## Setup
 
-### 1. Clone the repo
+### Option A — Portainer (recommended for remote self-hosting)
+
+A pre-built image is published to GitHub Container Registry automatically on every push to `main`.
+
+1. In Portainer go to **Stacks → Add stack → Web editor**
+2. Paste the contents of [`stack.yml`](stack.yml) from this repo
+3. Update the `/path/to/your/music` bind mount to your actual host music path
+4. Switch to the **Environment variables** tab and set:
+
+   | Variable | Value |
+   |---|---|
+   | `NAVIDROME_URL` | `http://your-navidrome-host:4533` |
+   | `NAVIDROME_USER` | your Navidrome username |
+   | `NAVIDROME_PASSWORD` | your Navidrome password |
+   | `SECRET_KEY` | any long random string |
+   | `JOB_RETENTION_DAYS` | how many days to keep completed jobs (default `30`) |
+
+   > **Do not hardcode passwords directly in the stack file.** Use Portainer's Environment variables tab or Docker Secrets instead.
+
+5. Click **Deploy the stack**
+
+Two named volumes (`playlistbuilder_data` and `playlistbuilder_beets`) are created automatically to persist the database and beets library across container updates.
+
+---
+
+### Option B — Local Docker Compose
 
 ```bash
 git clone <repo-url>
 cd PlaylistBuilder
-```
-
-### 2. Create your `.env` file
-
-```bash
 cp .env.example .env
 ```
 
@@ -64,10 +84,8 @@ NAVIDROME_URL=http://your-host:4533  # your Navidrome instance URL
 NAVIDROME_USER=admin
 NAVIDROME_PASSWORD=your-password
 SECRET_KEY=change-me-to-something-random
-JOB_RETENTION_DAYS=30                # auto-delete completed jobs older than this (default 30)
+JOB_RETENTION_DAYS=30
 ```
-
-### 3. Start the app
 
 ```bash
 docker compose up --build -d
