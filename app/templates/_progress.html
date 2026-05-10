@@ -8,6 +8,42 @@
   {# polling stops automatically when status is done/cancelled/failed #}
 >
 
+  {# Action buttons — inside the polling div so they update with each swap #}
+  <div class="mb-4 flex gap-2">
+    {% if job.status == 'running' %}
+      <form action="/jobs/{{ job.id }}/cancel" method="post">
+        <button type="submit"
+                class="rounded-lg border border-red-700 px-3 py-1 text-xs font-semibold
+                       text-red-400 hover:bg-red-900/40 active:bg-red-900/60">
+          Cancel
+        </button>
+      </form>
+    {% elif job.status == 'pending' %}
+      <span class="rounded-lg border border-gray-700 px-3 py-1 text-xs font-semibold
+                   text-gray-500 animate-pulse">Starting…</span>
+    {% else %}
+      {% set pending_count = tracks | selectattr('status', 'equalto', 'pending') | list | length %}
+      {% set retryable_count = job.tracks_failed + pending_count %}
+      {% if retryable_count > 0 %}
+        <form action="/jobs/{{ job.id }}/retry" method="post">
+          <button type="submit"
+                  class="rounded-lg border border-indigo-700 px-3 py-1 text-xs font-semibold
+                         text-indigo-400 hover:bg-indigo-900/40 active:bg-indigo-900/60">
+            Retry failed ({{ retryable_count }})
+          </button>
+        </form>
+      {% endif %}
+      <form action="/jobs/{{ job.id }}/delete" method="post"
+            onsubmit="return confirm('Remove this job and reset all downloaded tracks?')">
+        <button type="submit"
+                class="rounded-lg border border-gray-700 px-3 py-1 text-xs font-semibold
+                       text-gray-500 hover:border-red-700 hover:text-red-400">
+          Remove
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
   {# Progress bar #}
   {% if job.tracks_total %}
     {% set done_count = job.tracks_done + job.tracks_failed %}

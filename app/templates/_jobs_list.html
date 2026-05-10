@@ -39,7 +39,19 @@
           </span>
         </a>
         {% if job.status not in ('running', 'pending') %}
-          <form action="/jobs/{{ job.id }}/delete" method="post">
+          {% set pending_count = job.playlist.tracks | selectattr('status', 'equalto', 'pending') | list | length %}
+          {% set retryable_count = job.tracks_failed + pending_count %}
+          {% if retryable_count > 0 %}
+            <form action="/jobs/{{ job.id }}/retry" method="post">
+              <button type="submit"
+                      class="shrink-0 rounded-lg border border-indigo-700 px-3 py-2 text-xs
+                             font-semibold text-indigo-400 hover:bg-indigo-900/40">
+                Retry ({{ retryable_count }})
+              </button>
+            </form>
+          {% endif %}
+          <form action="/jobs/{{ job.id }}/delete" method="post"
+                onsubmit="return confirm('Remove this job and reset all downloaded tracks?')">
             <button type="submit"
                     class="shrink-0 rounded-lg border border-gray-700 px-3 py-2 text-xs
                            text-gray-500 hover:border-red-700 hover:text-red-400">
