@@ -8,9 +8,11 @@ from app.models import Playlist, Track
 # iTunes distinguished kinds that indicate system/auto playlists to skip.
 _SKIP_KINDS = {2, 3, 4, 5, 6, 7, 10, 19, 26}
 
+_LIBRARY_ID = 1  # singleton global library
 
-def parse_library(file_path: str, library_id: int) -> int:
-    """Parse an iTunes Library XML file and persist playlists/tracks.
+
+def parse_library(file_path: str) -> int:
+    """Parse an iTunes Library XML file and merge playlists/tracks into the global library.
 
     Skips system playlists (Master, Purchased, etc.). New tracks on existing
     playlists are added as pending; already-imported tracks keep their status.
@@ -33,12 +35,14 @@ def parse_library(file_path: str, library_id: int) -> int:
             continue
 
         playlist = Playlist.query.filter_by(
-            itunes_id=itunes_id, library_id=library_id
+            itunes_id=itunes_id, library_id=_LIBRARY_ID
         ).first()
         if not playlist:
-            playlist = Playlist(library_id=library_id, name=name, itunes_id=itunes_id)
+            playlist = Playlist(library_id=_LIBRARY_ID, name=name, itunes_id=itunes_id)
             db.session.add(playlist)
             db.session.flush()
+        elif playlist.name != name:
+            playlist.name = name
 
         existing_itunes_ids = {t.itunes_id for t in playlist.tracks if t.itunes_id}
 
@@ -71,8 +75,8 @@ def parse_library(file_path: str, library_id: int) -> int:
     return count
 
 
-def parse_playlist_txt(file_path: str, playlist_name: str, library_id: int) -> int:
-    """Parse an Apple Music playlist .txt export and persist it as a single playlist.
+def parse_playlist_txt(file_path: str, playlist_name: str) -> int:
+    """Parse an Apple Music playlist .txt export and merge it into the global library.
 
     The file is UTF-16 LE tab-separated with a header row. The playlist name is
     supplied by the caller (derived from the sanitised filename). Existing tracks
@@ -95,15 +99,15 @@ def parse_playlist_txt(file_path: str, playlist_name: str, library_id: int) -> i
         except ValueError:
             return row[fallback].strip() if fallback < len(row) else ''
 
-    # Synthetic stable ID for the playlist: md5 of library_id + name
-    pl_itunes_id = hashlib.md5(f'{library_id}:{playlist_name}'.encode()).hexdigest()
+    # Stable ID keyed on playlist name only (no library_id — singleton library)
+    pl_itunes_id = hashlib.md5(playlist_name.encode()).hexdigest()
 
     playlist = Playlist.query.filter_by(
-        itunes_id=pl_itunes_id, library_id=library_id
+        itunes_id=pl_itunes_id, library_id=_LIBRARY_ID
     ).first()
     if not playlist:
         playlist = Playlist(
-            library_id=library_id, name=playlist_name, itunes_id=pl_itunes_id
+            library_id=_LIBRARY_ID, name=playlist_name, itunes_id=pl_itunes_id
         )
         db.session.add(playlist)
         db.session.flush()

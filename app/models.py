@@ -6,8 +6,8 @@ class Library(db.Model):
     __tablename__ = 'library'
 
     id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(255), nullable=False)
-    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    name = db.Column(db.String(255), nullable=False, default='App Library')
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     playlists = db.relationship('Playlist', backref='library', lazy=True)
 

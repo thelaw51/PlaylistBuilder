@@ -1,8 +1,3 @@
-# Portainer stack file for PlaylistBuilder.
-# Paste this into Portainer > Stacks > Add stack > Web editor.
-# Set the environment variables in the "Environment variables" section of the
-# Portainer UI — do NOT hardcode passwords here or commit this file with real values.
-
 services:
   webapp:
     image: ghcr.io/thelaw51/playlistbuilder:latest
@@ -11,7 +6,7 @@ services:
     volumes:
       - playlistbuilder_data:/data
       - playlistbuilder_beets:/config/beets
-      - /path/to/your/music:/music        # ← change to your host music directory
+      - /path/to/your/music:/music # ← change to your host music directory
     environment:
       - NAVIDROME_URL=http://your-navidrome-host:4533
       - NAVIDROME_USER=admin

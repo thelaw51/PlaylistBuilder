@@ -18,15 +18,14 @@ def create_app() -> Flask:
 
     with app.app_context():
         from app.models import Library, Playlist, Track, ImportJob  # noqa: F401
-        from sqlalchemy import text, or_
+        from sqlalchemy import or_
         from datetime import datetime
         db.create_all()
-        with db.engine.connect() as conn:
-            try:
-                conn.execute(text("ALTER TABLE import_job ADD COLUMN navidrome_name VARCHAR(500)"))
-                conn.commit()
-            except Exception:
-                pass  # column already exists
+
+        # Ensure the singleton global library exists
+        if not db.session.get(Library, 1):
+            db.session.add(Library(id=1, name='App Library'))
+            db.session.commit()
 
         # Mark any jobs left running from a previous process as failed so they
         # don't appear frozen. Mid-flight tracks are set to failed so the

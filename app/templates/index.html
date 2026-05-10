@@ -1,67 +1,142 @@
 {% extends 'base.html' %}
-{% block title %}PlaylistBuilder — Upload Library{% endblock %}
+{% block title %}PlaylistBuilder — Library{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl">
-  <h1 class="mb-1 text-2xl font-bold">Import Apple Music Library</h1>
-  <p class="mb-4 text-sm text-gray-400">
-    Upload either:
-  </p>
-  <ul class="mb-6 list-disc pl-5 text-sm text-gray-400 space-y-1">
-    <li><strong>Full library XML</strong> — Music.app: <strong>File → Library → Export Library…</strong> — imports all your playlists at once</li>
-    <li><strong>Single playlist .txt</strong> — right-click a playlist → <strong>Export…</strong> — imports just that playlist, named after the file</li>
-  </ul>
-
-  <form action="/library" method="post" enctype="multipart/form-data"
-        class="mb-10 rounded-xl border border-gray-700 bg-gray-900 p-6">
-    <label class="mb-3 block text-sm font-medium text-gray-300" for="library_file">
-      iTunes Library XML or Playlist .txt
-    </label>
-    <input
-      id="library_file"
-      name="library_file"
-      type="file"
-      accept=".xml,.txt"
-      required
-      class="block w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-sm
-             text-gray-200 file:mr-4 file:rounded file:border-0 file:bg-indigo-700
-             file:px-3 file:py-1 file:text-sm file:font-medium file:text-white
-             hover:file:bg-indigo-600 focus:outline-none"
-    >
-    <button type="submit"
-            class="mt-4 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold
-                   text-white hover:bg-indigo-500 active:bg-indigo-700">
-      Upload &amp; Parse
-    </button>
-  </form>
-
-  {% if libraries %}
-    <h2 class="mb-3 text-lg font-semibold">Previous uploads</h2>
-    <ul class="space-y-2">
-      {% for lib in libraries %}
-        <li class="flex items-center justify-between rounded-lg border border-gray-700
-                   bg-gray-900 px-4 py-3">
-          <div>
-            <span class="font-medium">{{ lib.filename }}</span>
-            <span class="ml-3 text-xs text-gray-500">
-              {{ lib.uploaded_at.strftime('%d %b %Y %H:%M') }}
-            </span>
-          </div>
-          <div class="flex items-center gap-4">
-            <a href="/library/{{ lib.id }}"
-               class="text-sm text-indigo-400 hover:text-indigo-300">View playlists →</a>
-            <form action="/library/{{ lib.id }}/delete" method="post"
-                  onsubmit="return confirm('Remove this upload and all its playlists and jobs?')">
-              <button type="submit"
-                      title="Remove upload"
-                      class="text-lg leading-none text-gray-600 hover:text-red-400 transition-colors">
-                &times;
-              </button>
-            </form>
-          </div>
-        </li>
-      {% endfor %}
-    </ul>
+<div class="mb-8">
+  <h1 class="mb-1 text-2xl font-bold">Library</h1>
+  {% if lib and lib.updated_at %}
+    <p class="text-xs text-gray-500">Last updated {{ lib.updated_at.strftime('%d %b %Y %H:%M') }}</p>
   {% endif %}
+
+  <details class="mt-4 rounded-xl border border-gray-700 bg-gray-900">
+    <summary class="cursor-pointer px-5 py-3 text-sm font-medium text-gray-300 hover:text-white">
+      Update library from file…
+    </summary>
+    <div class="border-t border-gray-700 px-5 pb-5 pt-4">
+      <p class="mb-3 text-xs text-gray-500">
+        <strong>Full library XML</strong> — Music.app: <strong>File → Library → Export Library…</strong> — merges all playlists.
+        <br>
+        <strong>Single playlist .txt</strong> — right-click a playlist → <strong>Export…</strong> — adds or updates that playlist.
+      </p>
+      <form action="/library" method="post" enctype="multipart/form-data" class="flex items-center gap-3">
+        <input
+          id="library_file"
+          name="library_file"
+          type="file"
+          accept=".xml,.txt"
+          required
+          class="block rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-sm
+                 text-gray-200 file:mr-4 file:rounded file:border-0 file:bg-indigo-700
+                 file:px-3 file:py-1 file:text-sm file:font-medium file:text-white
+                 hover:file:bg-indigo-600 focus:outline-none"
+        >
+        <button type="submit"
+                class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold
+                       text-white hover:bg-indigo-500 active:bg-indigo-700 whitespace-nowrap">
+          Upload &amp; Merge
+        </button>
+      </form>
+    </div>
+  </details>
 </div>
+
+{% if playlists %}
+  {# Sort controls #}
+  <div class="mb-4 flex items-center gap-2 text-sm">
+    <span class="text-gray-500">Sort:</span>
+    <a href="?sort=name"
+       class="rounded-lg border px-3 py-1
+              {% if sort == 'name' %}border-indigo-600 text-indigo-400
+              {% else %}border-gray-700 text-gray-400 hover:border-gray-500{% endif %}">
+      A–Z
+    </a>
+    <a href="?sort=tracks"
+       class="rounded-lg border px-3 py-1
+              {% if sort == 'tracks' %}border-indigo-600 text-indigo-400
+              {% else %}border-gray-700 text-gray-400 hover:border-gray-500{% endif %}">
+      Track count
+    </a>
+  </div>
+
+  {# Bulk import bar #}
+  <div class="mb-4 flex items-center gap-3">
+    <button id="import-selected-btn"
+            onclick="submitSelected()"
+            disabled
+            class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white
+                   hover:bg-indigo-500 active:bg-indigo-700
+                   disabled:cursor-not-allowed disabled:opacity-40">
+      Import selected (0)
+    </button>
+    <button onclick="toggleAll()" type="button"
+            class="text-xs text-gray-500 hover:text-gray-300">
+      Select all
+    </button>
+  </div>
+
+  {# Hidden form used by the bulk import button #}
+  <form id="bulk-form" action="/import-selected" method="post"></form>
+
+  <div class="space-y-3">
+    {% for pl in playlists %}
+      <div class="flex items-center gap-3 rounded-xl border border-gray-700 bg-gray-900 px-5 py-4">
+        <input type="checkbox"
+               class="playlist-cb h-4 w-4 rounded border-gray-600 bg-gray-800 accent-indigo-500"
+               value="{{ pl.id }}"
+               onchange="updateBulkBtn()">
+        <div class="min-w-0 flex-1">
+          <p class="font-medium">{{ pl.name }}</p>
+          <p class="text-xs text-gray-500">{{ pl.tracks | length }} track(s)</p>
+        </div>
+        <form hx-post="/playlist/{{ pl.id }}/import"
+              hx-swap="outerHTML"
+              class="flex items-center gap-2">
+          <input type="text" name="navidrome_name" placeholder="{{ pl.name }}"
+                 class="w-48 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-sm
+                        text-gray-200 placeholder-gray-500 focus:outline-none
+                        focus:ring-1 focus:ring-indigo-500">
+          <button type="submit"
+                  class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold
+                         text-white hover:bg-indigo-500 active:bg-indigo-700">
+            Import
+          </button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    function updateBulkBtn() {
+      const checked = document.querySelectorAll('.playlist-cb:checked');
+      const btn = document.getElementById('import-selected-btn');
+      btn.textContent = 'Import selected (' + checked.length + ')';
+      btn.disabled = checked.length === 0;
+    }
+
+    function submitSelected() {
+      const form = document.getElementById('bulk-form');
+      form.innerHTML = '';
+      document.querySelectorAll('.playlist-cb:checked').forEach(function(cb) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'pl';
+        input.value = cb.value;
+        form.appendChild(input);
+      });
+      form.submit();
+    }
+
+    let allSelected = false;
+    function toggleAll() {
+      allSelected = !allSelected;
+      document.querySelectorAll('.playlist-cb').forEach(function(cb) {
+        cb.checked = allSelected;
+      });
+      updateBulkBtn();
+    }
+  </script>
+
+{% else %}
+  <p class="text-gray-400">No playlists yet — upload an iTunes Library XML or playlist .txt file above.</p>
+{% endif %}
 {% endblock %}
