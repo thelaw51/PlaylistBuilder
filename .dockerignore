@@ -1,6 +1,11 @@
 data/
 .env
+.env.example
 *.pyc
 __pycache__/
 .git/
 .gitignore
+.github/
+README.md
+CLAUDE.md
+stack.yml
