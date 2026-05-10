@@ -55,4 +55,5 @@ class ImportJob(db.Model):
     tracks_total = db.Column(db.Integer, default=0)
     tracks_done = db.Column(db.Integer, default=0)
     tracks_failed = db.Column(db.Integer, default=0)
+    navidrome_name = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

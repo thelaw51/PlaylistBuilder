@@ -18,7 +18,14 @@ def create_app() -> Flask:
 
     with app.app_context():
         from app.models import Library, Playlist, Track, ImportJob  # noqa: F401
+        from sqlalchemy import text
         db.create_all()
+        with db.engine.connect() as conn:
+            try:
+                conn.execute(text("ALTER TABLE import_job ADD COLUMN navidrome_name VARCHAR(500)"))
+                conn.commit()
+            except Exception:
+                pass  # column already exists
 
     from app.routes.library import library_bp
     from app.routes.jobs import jobs_bp

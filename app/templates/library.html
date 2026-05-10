@@ -17,7 +17,12 @@
           <p class="font-medium">{{ pl.name }}</p>
           <p class="text-xs text-gray-500">{{ pl.tracks | length }} track(s)</p>
         </div>
-        <form action="/library/{{ lib.id }}/playlist/{{ pl.id }}/import" method="post">
+        <form action="/library/{{ lib.id }}/playlist/{{ pl.id }}/import" method="post"
+              class="flex items-center gap-2">
+          <input type="text" name="navidrome_name" placeholder="{{ pl.name }}"
+                 class="w-48 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-sm
+                        text-gray-200 placeholder-gray-500 focus:outline-none
+                        focus:ring-1 focus:ring-indigo-500">
           <button type="submit"
                   class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold
                          text-white hover:bg-indigo-500 active:bg-indigo-700">

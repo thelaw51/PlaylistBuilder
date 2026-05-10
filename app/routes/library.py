@@ -80,7 +80,8 @@ def import_playlist(lib_id: int, pl_id: int):
     if active:
         return redirect(url_for('jobs.show', job_id=active.id))
 
-    job = ImportJob(playlist_id=pl_id)
+    navidrome_name = request.form.get('navidrome_name', '').strip() or None
+    job = ImportJob(playlist_id=pl_id, navidrome_name=navidrome_name)
     db.session.add(job)
     db.session.commit()
 

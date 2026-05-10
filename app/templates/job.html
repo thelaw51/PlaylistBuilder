@@ -6,6 +6,9 @@
   <a href="/jobs" class="text-sm text-gray-500 hover:text-gray-300">← All jobs</a>
   <div class="mt-2 flex items-center gap-3">
     <h1 class="text-2xl font-bold">{{ job.playlist.name }}</h1>
+    {% if job.navidrome_name and job.navidrome_name != job.playlist.name %}
+      <span class="text-sm text-gray-400">→ Navidrome: <span class="text-gray-200">{{ job.navidrome_name }}</span></span>
+    {% endif %}
     <span class="rounded-full px-3 py-1 text-xs font-semibold
       {% if job.status == 'running' %}bg-indigo-900/60 text-indigo-300
       {% elif job.status == 'done' %}bg-green-900/60 text-green-300

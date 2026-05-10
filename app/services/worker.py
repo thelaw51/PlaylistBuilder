@@ -202,6 +202,6 @@ def _sync_to_navidrome(job: ImportJob) -> None:
 
     if song_ids:
         try:
-            navidrome.create_or_update_playlist(playlist.name, song_ids)
+            navidrome.create_or_update_playlist(job.navidrome_name or playlist.name, song_ids)
         except Exception:
             logger.exception('Navidrome playlist creation failed for job %s', job.id)
