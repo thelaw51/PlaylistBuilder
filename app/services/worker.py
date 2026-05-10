@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 _active_jobs: set[int] = set()
 _cancelled_jobs: set[int] = set()
 _lock = threading.Lock()
-_RETENTION_DAYS = int(os.environ.get('JOB_RETENTION_DAYS', '30'))
+_RETENTION_DAYS = int(os.environ.get("JOB_RETENTION_DAYS", "30"))
 
 
 def start_job(app, job_id: int) -> None:
@@ -38,8 +38,8 @@ def cancel_job(app, job_id: int) -> None:
 
     with app.app_context():
         job = db.session.get(ImportJob, job_id)
-        if job and job.status == 'running':
-            job.status = 'cancelled'
+        if job and job.status == "running":
+            job.status = "cancelled"
             job.completed_at = datetime.utcnow()
             db.session.commit()
 
@@ -49,7 +49,7 @@ def _run_job(app, job_id: int) -> None:
         try:
             _execute(job_id)
         except Exception:
-            logger.exception('Unhandled error in job %s', job_id)
+            logger.exception("Unhandled error in job %s", job_id)
         finally:
             with _lock:
                 _active_jobs.discard(job_id)
@@ -61,11 +61,11 @@ def _execute(job_id: int) -> None:
     if not job:
         return
 
-    job.status = 'running'
+    job.status = "running"
     job.started_at = datetime.utcnow()
     db.session.commit()
 
-    tracks = Track.query.filter_by(playlist_id=job.playlist_id, status='pending').all()
+    tracks = Track.query.filter_by(playlist_id=job.playlist_id, status="pending").all()
     job.tracks_total = len(tracks)
     db.session.commit()
 
@@ -76,15 +76,15 @@ def _execute(job_id: int) -> None:
             break
         _process_track(job, track)
 
-    if job.status != 'cancelled':
+    if job.status != "cancelled":
         _sync_to_navidrome(job)
-        job.status = 'done'
+        job.status = "done"
         job.completed_at = datetime.utcnow()
         db.session.commit()
 
 
 def _process_track(job: ImportJob, track: Track) -> None:
-    track.status = 'downloading'
+    track.status = "downloading"
     track.updated_at = datetime.utcnow()
     db.session.commit()
 
@@ -92,29 +92,29 @@ def _process_track(job: ImportJob, track: Track) -> None:
         # Check Navidrome first — if Lidarr already has this track, skip the
         # download entirely and mark it as done so it lands in the playlist.
         try:
-            existing_id = navidrome.find_track_id(track.title, track.artist or '')
+            existing_id = navidrome.find_track_id(track.title, track.artist or "")
         except Exception:
             existing_id = None
 
         if existing_id:
-            track.source = 'navidrome'
-            track.status = 'done'
+            track.source = "navidrome"
+            track.status = "done"
             job.tracks_done += 1
             track.updated_at = datetime.utcnow()
             db.session.commit()
             return
 
         local_path, source, dl_error = downloader.download_track(
-            track.title, track.artist or '', track.album or ''
+            track.title, track.artist or "", track.album or ""
         )
 
         if not local_path:
-            _fail(job, track, dl_error or 'Not found on SoundCloud or YouTube')
+            _fail(job, track, dl_error or "Not found on SoundCloud or YouTube")
             return
 
         track.source = source
         track.local_path = local_path
-        track.status = 'tagging'
+        track.status = "tagging"
         track.updated_at = datetime.utcnow()
         db.session.commit()
 
@@ -125,10 +125,10 @@ def _process_track(job: ImportJob, track: Track) -> None:
                 # Beets returned 0 but left the file in place — it silently
                 # skipped the import (e.g. unrecognised format or bad tags).
                 os.remove(local_path)
-                _fail(job, track, 'beets did not move the file (check tags/format)')
+                _fail(job, track, "beets did not move the file (check tags/format)")
             else:
                 # File is gone — beets successfully moved it to /music.
-                track.status = 'done'
+                track.status = "done"
                 job.tracks_done += 1
         else:
             if os.path.exists(local_path):
@@ -136,7 +136,7 @@ def _process_track(job: ImportJob, track: Track) -> None:
                     os.remove(local_path)
                 except OSError:
                     pass
-            _fail(job, track, error or 'beets import failed')
+            _fail(job, track, error or "beets import failed")
 
     except Exception as exc:
         _fail(job, track, str(exc)[:500])
@@ -146,7 +146,7 @@ def _process_track(job: ImportJob, track: Track) -> None:
 
 
 def _fail(job: ImportJob, track: Track, reason: str) -> None:
-    track.status = 'failed'
+    track.status = "failed"
     track.error_msg = reason
     job.tracks_failed += 1
 
@@ -159,20 +159,22 @@ def cleanup_tracks(app, playlist_id: int) -> None:
     without attempting file deletion since we never downloaded them.
     """
     with app.app_context():
-        done_tracks = Track.query.filter_by(
-            playlist_id=playlist_id, status='done'
-        ).filter(Track.source != 'navidrome').all()
+        done_tracks = (
+            Track.query.filter_by(playlist_id=playlist_id, status="done")
+            .filter(Track.source != "navidrome")
+            .all()
+        )
 
         for track in done_tracks:
-            tagger.remove_from_library(track.title, track.artist or '')
+            tagger.remove_from_library(track.title, track.artist or "")
 
         Track.query.filter_by(playlist_id=playlist_id).update(
             {
-                'status': 'pending',
-                'source': None,
-                'local_path': None,
-                'error_msg': None,
-                'updated_at': datetime.utcnow(),
+                "status": "pending",
+                "source": None,
+                "local_path": None,
+                "error_msg": None,
+                "updated_at": datetime.utcnow(),
             },
             synchronize_session=False,
         )
@@ -185,7 +187,7 @@ def _sync_to_navidrome(job: ImportJob) -> None:
     if not playlist:
         return
 
-    done_tracks = Track.query.filter_by(playlist_id=job.playlist_id, status='done').all()
+    done_tracks = Track.query.filter_by(playlist_id=job.playlist_id, status="done").all()
     if not done_tracks:
         return
 
@@ -193,12 +195,12 @@ def _sync_to_navidrome(job: ImportJob) -> None:
         navidrome.trigger_scan()
         navidrome.wait_for_scan()
     except Exception:
-        logger.exception('Navidrome scan failed for job %s', job.id)
+        logger.exception("Navidrome scan failed for job %s", job.id)
         return
 
     song_ids: list[str] = []
     for track in done_tracks:
-        nid = navidrome.find_track_id(track.title, track.artist or '')
+        nid = navidrome.find_track_id(track.title, track.artist or "")
         if nid:
             song_ids.append(nid)
 
@@ -206,7 +208,7 @@ def _sync_to_navidrome(job: ImportJob) -> None:
         try:
             navidrome.create_or_update_playlist(job.navidrome_name or playlist.name, song_ids)
         except Exception:
-            logger.exception('Navidrome playlist creation failed for job %s', job.id)
+            logger.exception("Navidrome playlist creation failed for job %s", job.id)
 
 
 def purge_old_jobs(app) -> None:
@@ -214,18 +216,19 @@ def purge_old_jobs(app) -> None:
     cutoff = datetime.utcnow() - timedelta(days=_RETENTION_DAYS)
     with app.app_context():
         old_jobs = ImportJob.query.filter(
-            ImportJob.status.in_(['done', 'failed', 'cancelled']),
+            ImportJob.status.in_(["done", "failed", "cancelled"]),
             ImportJob.created_at < cutoff,
         ).all()
         for job in old_jobs:
             db.session.delete(job)
         if old_jobs:
             db.session.commit()
-            logger.info('Purged %d old job(s) older than %d days', len(old_jobs), _RETENTION_DAYS)
+            logger.info("Purged %d old job(s) older than %d days", len(old_jobs), _RETENTION_DAYS)
 
 
 def start_maintenance(app) -> None:
     """Start a daemon thread that purges old jobs every 24 hours."""
+
     def loop():
         while True:
             time.sleep(86400)

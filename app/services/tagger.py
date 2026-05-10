@@ -3,7 +3,7 @@
 import os
 import subprocess
 
-BEETS_CONFIG = os.environ.get('BEETS_CONFIG', '/config/beets/config.yaml')
+BEETS_CONFIG = os.environ.get("BEETS_CONFIG", "/config/beets/config.yaml")
 
 
 def import_file(file_path: str) -> tuple[bool, str]:
@@ -13,12 +13,13 @@ def import_file(file_path: str) -> tuple[bool, str]:
     and just moves/organises the file. Returns ``(success, error_message)``.
     """
     cmd = [
-        'beet',
-        '--config', BEETS_CONFIG,
-        'import',
-        '--quiet',
-        '-A',
-        '--',
+        "beet",
+        "--config",
+        BEETS_CONFIG,
+        "import",
+        "--quiet",
+        "-A",
+        "--",
         file_path,
     ]
 
@@ -31,10 +32,12 @@ def import_file(file_path: str) -> tuple[bool, str]:
             shell=False,
         )
         if result.returncode == 0:
-            return True, ''
-        return False, (result.stderr or result.stdout or 'beets returned non-zero exit').strip()[:500]
+            return True, ""
+        return False, (result.stderr or result.stdout or "beets returned non-zero exit").strip()[
+            :500
+        ]
     except subprocess.TimeoutExpired:
-        return False, 'beet import timed out after 120 s'
+        return False, "beet import timed out after 120 s"
     except OSError as exc:
         return False, str(exc)
 
@@ -47,13 +50,14 @@ def remove_from_library(title: str, artist: str) -> None:
     """
     # Beets query terms never start with '-' so no '--' sentinel is needed here.
     cmd = [
-        'beet',
-        '--config', BEETS_CONFIG,
-        'remove',
-        '--delete',
-        '--force',
-        f'title:{title}',
-        f'artist:{artist}',
+        "beet",
+        "--config",
+        BEETS_CONFIG,
+        "remove",
+        "--delete",
+        "--force",
+        f"title:{title}",
+        f"artist:{artist}",
     ]
 
     try:

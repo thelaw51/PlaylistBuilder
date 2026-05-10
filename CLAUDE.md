@@ -32,6 +32,15 @@ FLASK_APP=run.py python run.py   # debug mode
 
 There are no automated tests.
 
+## Code formatting
+
+Ruff handles formatting and linting. Run after every change before committing:
+
+```bash
+ruff format .
+ruff check .
+```
+
 ## Environment variables
 
 | Variable | Purpose |
