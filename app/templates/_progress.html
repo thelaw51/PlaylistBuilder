@@ -1,6 +1,6 @@
 {# HTMX polling partial — swaps itself out every 2 s while the job is running #}
 <div id="progress"
-  {% if job.status == 'running' %}
+  {% if job.status in ('running', 'pending') %}
   hx-get="/jobs/{{ job.id }}/progress"
   hx-trigger="every 2s"
   hx-swap="outerHTML"
