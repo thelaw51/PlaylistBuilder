@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, redirect, render_template, url_for
+from flask import Blueprint, current_app, redirect, render_template, request, url_for
 
 from app import db
 from app.models import ImportJob, Track
@@ -81,4 +81,8 @@ def retry(job_id: int):
     db.session.commit()
 
     worker.start_job(current_app._get_current_object(), new_job.id)
+
+    if request.headers.get('HX-Request'):
+        jobs = ImportJob.query.order_by(ImportJob.created_at.desc()).all()
+        return render_template('_jobs_list.html', jobs=jobs)
     return redirect(url_for('jobs.show', job_id=new_job.id))
