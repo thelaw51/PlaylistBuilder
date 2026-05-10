@@ -5,40 +5,40 @@
   hx-trigger="every 2s"
   hx-swap="outerHTML"
   {% endif %}
-  {# polling stops automatically when status is done/cancelled/failed #}
 >
 
   {# Action buttons — inside the polling div so they update with each swap #}
-  <div class="mb-4 flex gap-2">
+  <div class="mb-5 flex items-center gap-2">
     {% if job.status == 'running' %}
       <form action="/jobs/{{ job.id }}/cancel" method="post">
         <button type="submit"
-                class="rounded-lg border border-red-700 px-3 py-1 text-xs font-semibold
-                       text-red-400 hover:bg-red-900/40 active:bg-red-900/60">
-          Cancel
+                class="border border-[#3d1515] px-3 py-1.5 text-[11px] text-red-500
+                       hover:bg-[rgba(127,29,29,0.12)] transition-colors">
+          cancel
         </button>
       </form>
     {% elif job.status == 'pending' %}
-      <span class="rounded-lg border border-gray-700 px-3 py-1 text-xs font-semibold
-                   text-gray-500 animate-pulse">Starting…</span>
+      <span class="animate-pulse border border-[#1e1e1e] px-3 py-1.5 text-[11px] text-[#3a3a3a]">
+        starting…
+      </span>
     {% else %}
       {% set pending_count = tracks | selectattr('status', 'equalto', 'pending') | list | length %}
       {% set retryable_count = job.tracks_failed + pending_count %}
       {% if retryable_count > 0 %}
         <form action="/jobs/{{ job.id }}/retry" method="post">
           <button type="submit"
-                  class="rounded-lg border border-indigo-700 px-3 py-1 text-xs font-semibold
-                         text-indigo-400 hover:bg-indigo-900/40 active:bg-indigo-900/60">
-            Retry failed ({{ retryable_count }})
+                  class="border border-[#1a3320] px-3 py-1.5 text-[11px] text-[#4ade80]
+                         hover:border-[#22c55e] hover:bg-[rgba(34,197,94,0.06)] transition-colors">
+            retry failed ({{ retryable_count }})
           </button>
         </form>
       {% endif %}
       <form action="/jobs/{{ job.id }}/delete" method="post"
             onsubmit="return confirm('Remove this job and reset all downloaded tracks?')">
         <button type="submit"
-                class="rounded-lg border border-gray-700 px-3 py-1 text-xs font-semibold
-                       text-gray-500 hover:border-red-700 hover:text-red-400">
-          Remove
+                class="border border-[#1e1e1e] px-3 py-1.5 text-[11px] text-[#404040]
+                       hover:border-[#3d1515] hover:text-red-500 transition-colors">
+          remove
         </button>
       </form>
     {% endif %}
@@ -48,53 +48,57 @@
   {% if job.tracks_total %}
     {% set done_count = job.tracks_done + job.tracks_failed %}
     {% set pct = (done_count / job.tracks_total * 100) | int %}
-    <div class="mb-2 flex items-center justify-between text-sm text-gray-400">
-      <span>{{ done_count }} / {{ job.tracks_total }} processed</span>
+    <div class="mb-1.5 flex items-center justify-between text-[11px] text-[#3a3a3a] tabular-nums">
+      <span>{{ done_count }} / {{ job.tracks_total }}</span>
       <span>{{ job.tracks_done }} done · {{ job.tracks_failed }} failed</span>
     </div>
-    <div class="mb-6 h-2 w-full rounded-full bg-gray-700">
-      <div class="h-2 rounded-full bg-indigo-500 transition-all" style="width: {{ pct }}%"></div>
+    <div class="mb-7 h-px w-full bg-[#1a1a1a]">
+      <div class="h-px bg-[#22c55e] transition-all duration-500" style="width: {{ pct }}%"></div>
     </div>
   {% elif job.status == 'running' %}
-    <p class="mb-6 text-sm text-gray-400 animate-pulse">Starting…</p>
+    <p class="mb-7 animate-pulse text-[11px] text-[#3a3a3a]">starting…</p>
   {% endif %}
 
   {# Track table #}
-  <div class="overflow-hidden rounded-xl border border-gray-700">
-    <table class="w-full text-sm">
-      <thead class="bg-gray-800 text-xs uppercase tracking-wider text-gray-500">
-        <tr>
-          <th class="px-4 py-3 text-left">Track</th>
-          <th class="px-4 py-3 text-left">Artist</th>
-          <th class="px-4 py-3 text-left">Source</th>
-          <th class="px-4 py-3 text-left">Status</th>
+  <div class="border-t border-[#1c1c1c]">
+    <table class="w-full">
+      <thead>
+        <tr class="border-b border-[#1c1c1c] text-[10px] text-[#2e2e2e] uppercase tracking-[0.1em]">
+          <th class="py-2 pr-6 text-left font-normal">title</th>
+          <th class="py-2 pr-6 text-left font-normal">artist</th>
+          <th class="py-2 pr-6 text-left font-normal hidden sm:table-cell">source</th>
+          <th class="py-2 text-left font-normal">status</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-800">
+      <tbody>
         {% for track in tracks %}
-          <tr class="bg-gray-900">
-            <td class="max-w-xs truncate px-4 py-3 font-medium">{{ track.title }}</td>
-            <td class="max-w-xs truncate px-4 py-3 text-gray-400">{{ track.artist or '—' }}</td>
-            <td class="px-4 py-3 text-gray-500 text-xs">
-              {% if track.source == 'soundcloud' %}SoundCloud
-              {% elif track.source == 'youtube' %}YouTube
-              {% elif track.source == 'navidrome' %}Already in library
+          <tr class="border-b border-[#0f0f0f] hover:bg-[rgba(255,255,255,0.015)] transition-colors">
+            <td class="py-2 pr-6 max-w-[16rem] truncate text-[11px] text-[#c8c8c8]">
+              {{ track.title }}
+            </td>
+            <td class="py-2 pr-6 max-w-[12rem] truncate text-[11px] text-[#484848]">
+              {{ track.artist or '—' }}
+            </td>
+            <td class="py-2 pr-6 text-[11px] text-[#333] hidden sm:table-cell">
+              {% if track.source == 'soundcloud' %}sc
+              {% elif track.source == 'youtube' %}yt
+              {% elif track.source == 'navidrome' %}nav
               {% else %}—{% endif %}
             </td>
-            <td class="px-4 py-3">
-              <span class="rounded-full px-2 py-0.5 text-xs font-semibold
-                {% if track.status == 'done' %}bg-green-900/60 text-green-300
-                {% elif track.status == 'failed' %}bg-red-900/60 text-red-300
-                {% elif track.status in ('downloading', 'tagging') %}bg-indigo-900/60 text-indigo-300
-                {% else %}bg-gray-700 text-gray-400{% endif %}">
+            <td class="py-2">
+              <span class="px-1.5 py-0.5 text-[10px] uppercase tracking-[0.08em]
+                {% if track.status == 'done' %}bg-[rgba(22,163,74,0.1)] text-green-400
+                {% elif track.status == 'failed' %}bg-[rgba(220,38,38,0.1)] text-red-400
+                {% elif track.status in ('downloading', 'tagging') %}bg-[rgba(37,99,235,0.1)] text-blue-400
+                {% else %}bg-[rgba(60,60,60,0.15)] text-[#484848]{% endif %}">
                 {{ track.status }}
               </span>
             </td>
           </tr>
           {% if track.status == 'failed' and track.error_msg %}
-            <tr class="bg-gray-950">
-              <td colspan="4" class="px-4 pb-3 pt-0">
-                <p class="rounded-md bg-red-950/40 px-3 py-2 font-mono text-xs text-red-400 break-all">
+            <tr class="border-b border-[#0f0f0f]">
+              <td colspan="4" class="pb-2 pt-0">
+                <p class="px-3 py-2 text-[10px] text-red-400 bg-[rgba(127,29,29,0.1)] break-all leading-relaxed">
                   {{ track.error_msg }}
                 </p>
               </td>

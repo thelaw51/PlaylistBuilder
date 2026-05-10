@@ -1,29 +1,32 @@
 {% extends 'base.html' %}
-{% block title %}Job {{ job.id }} — PlaylistBuilder{% endblock %}
+{% block title %}{{ job.playlist.name }} — PlaylistBuilder{% endblock %}
 
 {% block content %}
-<div class="mb-6">
-  <a href="/jobs" class="text-sm text-gray-500 hover:text-gray-300">← All jobs</a>
-  <div class="mt-2 flex items-center gap-3">
-    <h1 class="text-2xl font-bold">{{ job.playlist.name }}</h1>
+<div class="mb-7">
+  <a href="/jobs" class="text-[11px] text-[#3a3a3a] hover:text-[#888] transition-colors">← jobs</a>
+
+  <div class="mt-4 flex items-center gap-3 flex-wrap">
+    <h1 class="text-sm font-medium text-[#e8e8e8]">{{ job.playlist.name }}</h1>
     {% if job.navidrome_name and job.navidrome_name != job.playlist.name %}
-      <span class="text-sm text-gray-400">→ Navidrome: <span class="text-gray-200">{{ job.navidrome_name }}</span></span>
+      <span class="text-[11px] text-[#3a3a3a]">
+        → <span class="text-[#666]">{{ job.navidrome_name }}</span>
+      </span>
     {% endif %}
-    <span class="rounded-full px-3 py-1 text-xs font-semibold
-      {% if job.status == 'running' %}bg-indigo-900/60 text-indigo-300
-      {% elif job.status == 'done' %}bg-green-900/60 text-green-300
-      {% elif job.status == 'cancelled' %}bg-yellow-900/60 text-yellow-300
-      {% elif job.status == 'failed' %}bg-red-900/60 text-red-300
-      {% else %}bg-gray-700 text-gray-400{% endif %}">
+    <span class="px-1.5 py-0.5 text-[10px] uppercase tracking-[0.1em]
+      {% if job.status == 'running' %}bg-[rgba(37,99,235,0.1)] text-blue-400
+      {% elif job.status == 'done' %}bg-[rgba(22,163,74,0.1)] text-green-400
+      {% elif job.status == 'cancelled' %}bg-[rgba(113,113,122,0.1)] text-zinc-500
+      {% elif job.status == 'failed' %}bg-[rgba(220,38,38,0.1)] text-red-400
+      {% else %}bg-[rgba(60,60,60,0.15)] text-[#555]{% endif %}">
       {{ job.status }}
     </span>
-    {# Action buttons are rendered inside _progress.html so they update with each poll #}
   </div>
+
   {% if job.started_at %}
-    <p class="text-xs text-gray-500">
-      Started {{ job.started_at.strftime('%d %b %Y %H:%M:%S') }}
+    <p class="mt-2 text-[11px] text-[#3a3a3a] tabular-nums">
+      {{ job.started_at.strftime('%d %b %Y %H:%M:%S') }}
       {% if job.completed_at %}
-        · Completed {{ job.completed_at.strftime('%H:%M:%S') }}
+        <span class="text-[#252525]"> · </span>{{ job.completed_at.strftime('%H:%M:%S') }}
       {% endif %}
     </p>
   {% endif %}
