@@ -74,9 +74,12 @@ def retry(job_id: int):
         {'status': 'pending', 'source': None, 'local_path': None, 'error_msg': None},
         synchronize_session=False,
     )
-    db.session.commit()
 
-    new_job = ImportJob(playlist_id=job.playlist_id)
+    navidrome_name = job.navidrome_name
+    playlist_id = job.playlist_id
+    db.session.delete(job)
+
+    new_job = ImportJob(playlist_id=playlist_id, navidrome_name=navidrome_name)
     db.session.add(new_job)
     db.session.commit()
 
