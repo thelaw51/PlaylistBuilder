@@ -9,6 +9,7 @@
 </div>
 
 {% if playlists %}
+  {# Sort controls #}
   <div class="mb-4 flex items-center gap-2 text-sm">
     <span class="text-gray-500">Sort:</span>
     <a href="?sort=name"
@@ -24,15 +25,39 @@
       Track count
     </a>
   </div>
+
+  {# Bulk import bar — shown/enabled by JS as checkboxes are ticked #}
+  <div class="mb-4 flex items-center gap-3">
+    <button id="import-selected-btn"
+            onclick="submitSelected()"
+            disabled
+            class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white
+                   hover:bg-indigo-500 active:bg-indigo-700
+                   disabled:cursor-not-allowed disabled:opacity-40">
+      Import selected (0)
+    </button>
+    <button onclick="toggleAll()" type="button"
+            class="text-xs text-gray-500 hover:text-gray-300">
+      Select all
+    </button>
+  </div>
+
+  {# Hidden form used by the bulk import button #}
+  <form id="bulk-form" action="/library/{{ lib.id }}/import-selected" method="post"></form>
+
   <div class="space-y-3">
     {% for pl in playlists %}
-      <div class="flex items-center justify-between rounded-xl border border-gray-700
-                  bg-gray-900 px-5 py-4">
-        <div>
+      <div class="flex items-center gap-3 rounded-xl border border-gray-700 bg-gray-900 px-5 py-4">
+        <input type="checkbox"
+               class="playlist-cb h-4 w-4 rounded border-gray-600 bg-gray-800 accent-indigo-500"
+               value="{{ pl.id }}"
+               onchange="updateBulkBtn()">
+        <div class="min-w-0 flex-1">
           <p class="font-medium">{{ pl.name }}</p>
           <p class="text-xs text-gray-500">{{ pl.tracks | length }} track(s)</p>
         </div>
-        <form action="/library/{{ lib.id }}/playlist/{{ pl.id }}/import" method="post"
+        <form hx-post="/library/{{ lib.id }}/playlist/{{ pl.id }}/import"
+              hx-swap="outerHTML"
               class="flex items-center gap-2">
           <input type="text" name="navidrome_name" placeholder="{{ pl.name }}"
                  class="w-48 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-sm
@@ -47,6 +72,38 @@
       </div>
     {% endfor %}
   </div>
+
+  <script>
+    function updateBulkBtn() {
+      const checked = document.querySelectorAll('.playlist-cb:checked');
+      const btn = document.getElementById('import-selected-btn');
+      btn.textContent = 'Import selected (' + checked.length + ')';
+      btn.disabled = checked.length === 0;
+    }
+
+    function submitSelected() {
+      const form = document.getElementById('bulk-form');
+      form.innerHTML = '';
+      document.querySelectorAll('.playlist-cb:checked').forEach(function(cb) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'pl';
+        input.value = cb.value;
+        form.appendChild(input);
+      });
+      form.submit();
+    }
+
+    let allSelected = false;
+    function toggleAll() {
+      allSelected = !allSelected;
+      document.querySelectorAll('.playlist-cb').forEach(function(cb) {
+        cb.checked = allSelected;
+      });
+      updateBulkBtn();
+    }
+  </script>
+
 {% else %}
   <p class="text-gray-400">No user playlists found in this library export.</p>
 {% endif %}
