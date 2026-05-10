@@ -13,6 +13,13 @@ def list_jobs():
     return render_template('jobs.html', jobs=jobs)
 
 
+@jobs_bp.route('/jobs/list')
+def list_partial():
+    """HTMX polling target — returns the jobs list partial."""
+    jobs = ImportJob.query.order_by(ImportJob.created_at.desc()).all()
+    return render_template('_jobs_list.html', jobs=jobs)
+
+
 @jobs_bp.route('/jobs/<int:job_id>')
 def show(job_id: int):
     job = db.session.get(ImportJob, job_id)

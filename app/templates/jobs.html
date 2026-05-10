@@ -4,48 +4,5 @@
 {% block content %}
 <h1 class="mb-6 text-2xl font-bold">Import Jobs</h1>
 
-{% if jobs %}
-  <div class="space-y-3">
-    {% for job in jobs %}
-      {% set pct = ((job.tracks_done + job.tracks_failed) / job.tracks_total * 100) | int if job.tracks_total else 0 %}
-      <div class="flex items-center gap-3">
-        <a href="/jobs/{{ job.id }}"
-           class="flex flex-1 items-center justify-between rounded-xl border border-gray-700
-                  bg-gray-900 px-5 py-4 hover:border-gray-500">
-          <div class="min-w-0 flex-1">
-            <p class="truncate font-medium">{{ job.playlist.name }}</p>
-            <p class="text-xs text-gray-500">
-              {{ job.tracks_done }} done · {{ job.tracks_failed }} failed
-              {% if job.tracks_total %} / {{ job.tracks_total }} total{% endif %}
-            </p>
-            {% if job.status == 'running' and job.tracks_total %}
-              <div class="mt-2 h-1 w-full rounded-full bg-gray-700">
-                <div class="h-1 rounded-full bg-indigo-500" style="width: {{ pct }}%"></div>
-              </div>
-            {% endif %}
-          </div>
-          <span class="ml-4 shrink-0 rounded-full px-3 py-1 text-xs font-semibold
-            {% if job.status == 'running' %}bg-indigo-900/60 text-indigo-300
-            {% elif job.status == 'done' %}bg-green-900/60 text-green-300
-            {% elif job.status == 'cancelled' %}bg-yellow-900/60 text-yellow-300
-            {% elif job.status == 'failed' %}bg-red-900/60 text-red-300
-            {% else %}bg-gray-700 text-gray-400{% endif %}">
-            {{ job.status }}
-          </span>
-        </a>
-        {% if job.status != 'running' %}
-          <form action="/jobs/{{ job.id }}/delete" method="post">
-            <button type="submit"
-                    class="shrink-0 rounded-lg border border-gray-700 px-3 py-2 text-xs
-                           text-gray-500 hover:border-red-700 hover:text-red-400">
-              Remove
-            </button>
-          </form>
-        {% endif %}
-      </div>
-    {% endfor %}
-  </div>
-{% else %}
-  <p class="text-gray-400">No jobs yet. <a href="/" class="text-indigo-400 hover:underline">Upload a library</a> to get started.</p>
-{% endif %}
+{% include '_jobs_list.html' %}
 {% endblock %}
