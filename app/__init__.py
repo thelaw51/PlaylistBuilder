@@ -53,4 +53,8 @@ def create_app() -> Flask:
     app.register_blueprint(library_bp)
     app.register_blueprint(jobs_bp)
 
+    from app.services import worker as _worker
+    _worker.purge_old_jobs(app)
+    _worker.start_maintenance(app)
+
     return app

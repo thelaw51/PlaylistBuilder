@@ -3,7 +3,8 @@
 import logging
 import os
 import threading
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 
 from app import db
 from app.models import ImportJob, Playlist, Track
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 _active_jobs: set[int] = set()
 _cancelled_jobs: set[int] = set()
 _lock = threading.Lock()
+_RETENTION_DAYS = int(os.environ.get('JOB_RETENTION_DAYS', '30'))
 
 
 def start_job(app, job_id: int) -> None:
@@ -205,3 +207,29 @@ def _sync_to_navidrome(job: ImportJob) -> None:
             navidrome.create_or_update_playlist(job.navidrome_name or playlist.name, song_ids)
         except Exception:
             logger.exception('Navidrome playlist creation failed for job %s', job.id)
+
+
+def purge_old_jobs(app) -> None:
+    """Delete terminal jobs older than JOB_RETENTION_DAYS."""
+    cutoff = datetime.utcnow() - timedelta(days=_RETENTION_DAYS)
+    with app.app_context():
+        old_jobs = ImportJob.query.filter(
+            ImportJob.status.in_(['done', 'failed', 'cancelled']),
+            ImportJob.created_at < cutoff,
+        ).all()
+        for job in old_jobs:
+            db.session.delete(job)
+        if old_jobs:
+            db.session.commit()
+            logger.info('Purged %d old job(s) older than %d days', len(old_jobs), _RETENTION_DAYS)
+
+
+def start_maintenance(app) -> None:
+    """Start a daemon thread that purges old jobs every 24 hours."""
+    def loop():
+        while True:
+            time.sleep(86400)
+            purge_old_jobs(app)
+
+    thread = threading.Thread(target=loop, daemon=True)
+    thread.start()
