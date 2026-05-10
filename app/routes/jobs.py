@@ -50,3 +50,28 @@ def delete(job_id: int):
         db.session.commit()
         worker.cleanup_tracks(current_app._get_current_object(), playlist_id)
     return redirect(url_for('jobs.list_jobs'))
+
+
+@jobs_bp.route('/jobs/<int:job_id>/retry', methods=['POST'])
+def retry(job_id: int):
+    """Reset failed tracks to pending and start a new import job."""
+    job = db.session.get(ImportJob, job_id)
+    if not job or job.status == 'running':
+        return redirect(url_for('jobs.show', job_id=job_id))
+
+    active = ImportJob.query.filter_by(playlist_id=job.playlist_id, status='running').first()
+    if active:
+        return redirect(url_for('jobs.show', job_id=active.id))
+
+    Track.query.filter_by(playlist_id=job.playlist_id, status='failed').update(
+        {'status': 'pending', 'source': None, 'local_path': None, 'error_msg': None},
+        synchronize_session=False,
+    )
+    db.session.commit()
+
+    new_job = ImportJob(playlist_id=job.playlist_id)
+    db.session.add(new_job)
+    db.session.commit()
+
+    worker.start_job(current_app._get_current_object(), new_job.id)
+    return redirect(url_for('jobs.show', job_id=new_job.id))
