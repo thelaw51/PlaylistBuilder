@@ -59,6 +59,7 @@ A pre-built image is published to GitHub Container Registry automatically on eve
    | `NAVIDROME_PASSWORD` | your Navidrome password |
    | `SECRET_KEY` | any long random string |
    | `JOB_RETENTION_DAYS` | how many days to keep completed jobs (default `30`) |
+   | `YT_COOKIES_FILE` | *(optional)* path inside the container to a Netscape cookies file for age-restricted YouTube videos — see [Age-restricted YouTube videos](#age-restricted-youtube-videos) |
 
    > **Do not hardcode passwords directly in the stack file.** Use Portainer's Environment variables tab or Docker Secrets instead.
 
@@ -107,11 +108,14 @@ Right-click a playlist in the sidebar → `Export…` → upload the `.txt` file
 
 ### Import a playlist
 
-1. Upload your file on the home page
-2. On the library page, optionally type a custom Navidrome playlist name in the field next to the playlist — leave it blank to use the Apple Music name as-is
-3. Click **Import**
-4. Watch progress update live — each track shows its status and source (SoundCloud, YouTube, or Already in library). Failed tracks show the error message inline
-5. When complete, the playlist appears in Navidrome automatically
+The home page shows your library and upload drawer in one place.
+
+1. Click **update library from file** to expand the upload drawer, then upload an `.xml` or `.txt` export — re-uploads merge into the existing library without resetting already-imported tracks
+2. Sort playlists by name (a–z) or track count using the toolbar
+3. Optionally type a custom Navidrome playlist name in the field next to a playlist — leave it blank to use the Apple Music name as-is
+4. Click **import** on that row, or use the checkboxes and **import (N)** button to queue multiple playlists at once
+5. Watch progress update live on the job page — each track shows its status and source (SoundCloud, YouTube, or already in library). Failed tracks show the error inline
+6. When complete, the playlist appears in Navidrome automatically
 
 ### Managing jobs
 
@@ -130,10 +134,33 @@ The jobs list refreshes automatically every few seconds while any import is acti
 - Tracks already in your Navidrome library (e.g. managed by Lidarr) are detected first and added to the playlist without re-downloading
 - Downloads from SoundCloud/YouTube are lossy (MP3, M4A, Opus). Lidarr-managed tracks retain their original quality
 - Cover art is embedded automatically from the download source
+- Re-uploading a library file **merges** into the existing library — playlists that were already imported are not reset
 - If a playlist with the same name already exists in Navidrome it will be **replaced** with the current import's tracks — use the custom name field if you want to keep an existing playlist untouched
 - The beets library (`config/beets/library.db`) tracks what has been imported. If you manually delete music files, remove the job through the UI rather than deleting files directly — this keeps the beets database consistent
 - Jobs that were running when the container last stopped are automatically marked as failed on startup so you can retry them cleanly
 - Completed, failed, and cancelled jobs are automatically purged after `JOB_RETENTION_DAYS` days (default 30) — this runs on startup and every 24 hours
+
+---
+
+## Age-restricted YouTube videos
+
+Most age-restricted videos are handled automatically using the YouTube Android player client (no configuration needed).
+
+For videos that still fail, you can provide a cookies file from a logged-in YouTube session:
+
+1. Install the **"Get cookies.txt LOCALLY"** extension (Chrome/Edge) or **"cookies.txt"** (Firefox)
+2. Go to `youtube.com` while logged in, then use the extension to export cookies for the current site
+3. Place the file somewhere the container can read it — the `/data` volume is the easiest:
+   ```
+   /your/host/data/youtube-cookies.txt
+   ```
+4. Set the env var in Portainer (or your compose file):
+   ```
+   YT_COOKIES_FILE=/data/youtube-cookies.txt
+   ```
+   No restart needed if the volume is already mounted — the path is read on each download.
+
+YouTube cookies typically expire after a few weeks. When they do, re-export and overwrite the file at the same path.
 
 ---
 
